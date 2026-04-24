@@ -1,0 +1,21 @@
+# Bootstrap workflow. The v1.0.0 release, repo description, topics, and
+# homepage were applied during the initial bootstrap and persist in GitHub's
+# repo settings. This workflow is retained as a manual dispatch no-op so the
+# filename is stable for future re-applications (e.g., recreating metadata
+# after a repo transfer).
+name: bootstrap-repo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Bootstrap already applied. To re-apply description/topics/homepage"
+          echo "or recreate the release, run scripts/apply_github_metadata.sh locally"
+          echo "with a PAT that has repo scope. See scripts/apply_github_metadata.sh."
