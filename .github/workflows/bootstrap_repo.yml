@@ -1,0 +1,123 @@
+name: bootstrap-repo
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  administration: write
+  metadata: write
+
+jobs:
+  bootstrap:
+    name: Set About + create release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set repo description + homepage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eo pipefail
+          curl -fsS -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }} \
+            -d '{
+              "description":"A 50K-turn voice pipeline benchmark and an 85K-param meta-controller that cuts P95 latency 12% and energy 71% vs fixed cloud. TMLR 2026.",
+              "homepage":"https://huggingface.co/datasets/vnmoorthy/pavo-bench",
+              "has_issues":true,
+              "has_wiki":false,
+              "has_discussions":true
+            }' > /tmp/patch.json
+          echo "PATCH result:"
+          jq -r '{description, homepage, has_discussions}' /tmp/patch.json || cat /tmp/patch.json
+
+      - name: Set repo topics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eo pipefail
+          curl -fsS -X PUT \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/topics \
+            -d '{
+              "names": [
+                "voice-ai","asr","llm","tts","benchmark",
+                "inference-optimization","edge-ai","latency",
+                "reinforcement-learning","ppo","speech-recognition",
+                "whisper","llama","gemma","voice-assistant",
+                "machine-learning","deep-learning","pytorch","tmlr"
+              ]
+            }' > /tmp/topics.json
+          echo "TOPICS result:"
+          jq '.names' /tmp/topics.json || cat /tmp/topics.json
+
+      - name: Create release v1.0.0 (idempotent)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eo pipefail
+          TITLE="PAVO-Bench ${TAG} — TMLR submission artifact"
+          NOTES=$(cat <<'NOTES'
+          ## PAVO-Bench v1.0 — TMLR 2026 submission artifact
+
+          ### Headline results (50,000 voice turns, A100/H100 + Apple M3 8 GB)
+
+          | Metric | vs fixed-cloud baseline | Significance |
+          |---|---|---|
+          | P95 end-to-end latency | **−12%** | p = 2×10⁻⁶ |
+          | Median latency | **−34%** | |
+          | Energy per turn | **−71%** | |
+          | Meta-controller size | 85,041 parameters | — |
+          | Meta-controller training | 106 seconds | — |
+
+          ### What's included
+
+          - **PAVO-Bench** — 50,000-turn voice-pipeline benchmark, 40K train / 10K test split. Also on [HuggingFace](https://huggingface.co/datasets/vnmoorthy/pavo-bench).
+          - **Trained meta-controller** — 85,041-parameter MLP, `experiments/outputs/meta_controller.pt`.
+          - **Reproducible tier 1/2/3 result JSONs** — every number in the paper is backed by a committed script + committed JSON.
+          - **`pavo_bench` Python package** — `pip install git+https://github.com/vnmoorthy/pavo-bench.git` gives you `load_dataset`, `PretrainedPAVORouter`, `benchmark_router`, `reproduce_coupling_cliff`.
+          - **[Colab quickstart](https://colab.research.google.com/github/vnmoorthy/pavo-bench/blob/main/notebooks/quickstart.ipynb)** — runs on free-tier CPU in ~2 minutes.
+          - **[Blog walkthrough](BLOG.md)** — the coupling cliff finding, explained.
+
+          ### Citation
+
+          See `CITATION.cff` or the bibtex block in `README.md`.
+          NOTES
+          )
+          # Check if release exists
+          existing=$(curl -sS \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG}" \
+            | jq -r '.id // empty')
+
+          if [ -n "$existing" ]; then
+            echo "Release for $TAG already exists (id=$existing). Updating notes."
+            curl -fsS -X PATCH \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$existing" \
+              -d "$(jq -n --arg title "$TITLE" --arg body "$NOTES" '{name:$title, body:$body}')"
+          else
+            echo "Creating release for $TAG."
+            curl -fsS -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases" \
+              -d "$(jq -n \
+                --arg tag "$TAG" \
+                --arg title "$TITLE" \
+                --arg body "$NOTES" \
+                '{tag_name:$tag, name:$title, body:$body, draft:false, prerelease:false}')"
+          fi
