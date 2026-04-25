@@ -1,8 +1,8 @@
-# Bootstrap workflow. The v1.0.0 release, repo description, topics, homepage,
-# and the vnmoorthy/vnmoorthy profile README were applied during initial
-# bootstrap and persist in GitHub's state. This workflow is retained as a
-# manual-dispatch no-op so the filename is stable for future re-applications.
-name: bootstrap-profile
+# Bootstrap workflow. Description, topics, homepage, v1.0.0 release,
+# vnmoorthy/vnmoorthy profile README, GitHub Discussions, and the seed issues
+# were all applied during initial bootstrap and persist in GitHub's state.
+# This workflow is retained as a manual-dispatch no-op.
+name: bootstrap-extras
 
 on:
   workflow_dispatch:
@@ -16,5 +16,4 @@ jobs:
     steps:
       - run: |
           echo "Bootstrap already applied."
-          echo "See scripts/apply_github_metadata.sh to re-apply repo About metadata"
-          echo "with any PAT that has repo scope."
+          echo "scripts/apply_github_metadata.sh re-applies repo About metadata."
