@@ -1,0 +1,11 @@
+# Default code owner for everything in the repo.
+# Pull requests automatically request review from these owners.
+*       @vnmoorthy
+
+# Experiment code + committed result JSONs — protect the TMLR submission artifacts.
+/data/                  @vnmoorthy
+/experiments/outputs/   @vnmoorthy
+/paper/                 @vnmoorthy
+/tier*.json             @vnmoorthy
+/tier*.jsonl            @vnmoorthy
+/component_ablation_results.json   @vnmoorthy
