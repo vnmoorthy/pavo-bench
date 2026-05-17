@@ -196,6 +196,6 @@ Code and dataset released under [CC-BY 4.0](https://creativecommons.org/licenses
 
 ## Links
 
-- **Paper (TMLR 2026):** [`paper/`](paper/)
+- **Paper (TMLR 2026):** [Paper](https://openreview.net/forum?id=zrneoIxlFx)
 - **Dataset on HuggingFace:** [huggingface.co/datasets/vnmoorthy/pavo-bench](https://huggingface.co/datasets/vnmoorthy/pavo-bench)
 - **Issues:** [github.com/vnmoorthy/pavo-bench/issues](https://github.com/vnmoorthy/pavo-bench/issues)
