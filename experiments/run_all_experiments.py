@@ -3,19 +3,36 @@
 PAVO Master Experiment Runner for Lambda Labs H100.
 Runs all experiments sequentially and saves results.
 
-Usage: python run_all_experiments.py [--hf-token YOUR_TOKEN]
+Usage: python run_all_experiments.py --skip-upload
+To publish results after a run, authenticate with `hf auth login` and omit
+`--skip-upload`.
 """
 
 import argparse
-import json
+import getpass
 import os
-import sys
 import time
+
+
+def _resolve_hf_token():
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    if token:
+        return token
+    try:
+        from huggingface_hub import HfFolder
+        cached = HfFolder.get_token()
+        if cached:
+            return cached
+    except ImportError:
+        pass
+    token = getpass.getpass("HuggingFace token (input hidden): ").strip()
+    if not token:
+        raise SystemExit("No HuggingFace token provided. Set HF_TOKEN or run `hf auth login`.")
+    return token
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hf-token", type=str, default=None,
-                        help="HuggingFace token for upload")
     parser.add_argument("--skip-e2e", action="store_true",
                         help="Skip E2E experiments (if already done)")
     parser.add_argument("--skip-training", action="store_true",
@@ -97,9 +114,7 @@ def main():
         print("\n" + "="*60)
         print("EXPERIMENT 5: Upload to HuggingFace")
         print("="*60)
-        token = args.hf_token
-        if token is None:
-            token = input("Enter HuggingFace token: ").strip()
+        token = _resolve_hf_token()
         from exp5_upload import upload_all
         upload_all(
             results_dir=results_dir,

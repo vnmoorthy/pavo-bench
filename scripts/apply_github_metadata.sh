@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Re-apply the repo's About metadata (description, topics, homepage) and
-# create/update the v1.0.0 release. Requires a PAT with repo scope in $GH_TOKEN.
+# Re-apply the repo's About metadata (description, topics, homepage).
+# This script does not create or modify GitHub releases. Requires an authenticated
+# token with repository-metadata scope in $GH_TOKEN.
 set -euo pipefail
 : "${GH_TOKEN:?export GH_TOKEN=ghp_... with repo scope first}"
 

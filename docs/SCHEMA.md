@@ -72,6 +72,10 @@ ASR cross-dataset comparison on LibriSpeech and FLEURS.
 ### `tier2_noise_robustness_results.json`
 ASR WER under white-noise injection at SNR 5–30 dB.
 
+### `experiments/outputs_new/real_asr_coupling.json`
+Real Whisper-error coupling across ASR–LLM pairs. `asr_word_accuracy_pct`
+is word accuracy on a 0–100 scale (for example, `99.57`); it is not WER.
+
 ## Tier 3 — scale
 
 ### `tier3_50k_train.jsonl` / `tier3_50k_test.jsonl`
