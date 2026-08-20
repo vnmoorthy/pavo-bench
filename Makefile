@@ -2,6 +2,8 @@
 PYTHON  ?= python3
 PIP     ?= $(PYTHON) -m pip
 RUFF    ?= $(PYTHON) -m ruff
+LINT_PATHS = pavo_bench/__init__.py pavo_bench/loader.py pavo_bench/routers.py \
+	pavo_bench/state.py pavo_bench/evaluate.py tests/ scripts/render_figures.py
 
 .PHONY: help install dev test lint format figures clean repro
 
@@ -15,13 +17,13 @@ dev:                        ## Install package + dev deps
 	$(PIP) install -e ".[dev,full]"
 
 test:                       ## Run the package smoke tests
-	$(PYTHON) -m pytest -q tests/ || $(PYTHON) -m unittest discover -s tests
+	$(PYTHON) -m pytest -q tests/
 
 lint:                       ## Lint with ruff
-	$(RUFF) check pavo_bench/ scripts/ tests/
+	$(RUFF) check $(LINT_PATHS)
 
 format:                     ## Auto-format with ruff
-	$(RUFF) format pavo_bench/ scripts/ tests/
+	$(RUFF) format $(LINT_PATHS)
 
 figures:                    ## Re-render figures from the committed JSONs
 	$(PYTHON) scripts/render_figures.py

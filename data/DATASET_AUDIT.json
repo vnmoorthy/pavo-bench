@@ -1,0 +1,115 @@
+{
+  "audit_version": 1,
+  "scope": "Unaltered released 40K/10K JSONL split",
+  "file_sha256": {
+    "tier3_50k_train.jsonl": "ed132397e262ea595cb13a93535e0d30eed6807242fd24add6aad01ba49f81f8",
+    "tier3_50k_test.jsonl": "65dbf4de46ad9b015a891868db782f28f5822d22442d2ed717d37b1b0c10581b",
+    "tier3_50k_summary.json": "fbd8c036b2b88c60b707c43e56b3891955e68d2d2dfd0b2d4977afad84cb873b"
+  },
+  "record_counts": {
+    "train": 40000,
+    "test": 10000,
+    "total": 50000,
+    "duplicate_indices": 0,
+    "train_test_index_overlap": 0
+  },
+  "reference_response_audit": {
+    "literal_timeout_train": 1385,
+    "literal_timeout_test": 358,
+    "literal_timeout_total": 1743,
+    "timeout_index_min": 13961,
+    "timeout_index_max": 15703,
+    "blank_total": 0,
+    "unique_total": 19472
+  },
+  "realized_characteristics": {
+    "source_counts": {
+      "synthetic": 50000
+    },
+    "unique_user_inputs": 1439,
+    "snr_db_min": 5.0,
+    "snr_db_max": 40.0,
+    "complexity_counts": {
+      "1": 11063,
+      "2": 13421,
+      "3": 12637,
+      "4": 8906,
+      "5": 3973
+    },
+    "complexity_percent": {
+      "1": 22.126,
+      "2": 26.842,
+      "3": 25.274,
+      "4": 17.812,
+      "5": 7.946
+    },
+    "noise_type_counts": {
+      "babble": 9928,
+      "clean": 9829,
+      "music": 4128,
+      "pink": 5952,
+      "traffic": 9995,
+      "white": 10168
+    }
+  },
+  "generation_phases": {
+    "indices_0_29999": {
+      "records": 30000,
+      "literal_timeout_references": 1743,
+      "unique_user_inputs": 1110,
+      "unique_reference_responses": 670,
+      "complexity_counts": {
+        "1": 5998,
+        "2": 7508,
+        "3": 7561,
+        "4": 5959,
+        "5": 2974
+      },
+      "noise_types": [
+        "babble",
+        "clean",
+        "pink",
+        "traffic",
+        "white"
+      ],
+      "context_token_values": [
+        50,
+        100,
+        200,
+        300,
+        500,
+        800
+      ],
+      "snr_precision": "one decimal place"
+    },
+    "indices_30000_49999": {
+      "records": 20000,
+      "literal_timeout_references": 0,
+      "unique_user_inputs": 330,
+      "unique_reference_responses": 18803,
+      "complexity_counts": {
+        "1": 5065,
+        "2": 5913,
+        "3": 5076,
+        "4": 2947,
+        "5": 999
+      },
+      "noise_types": [
+        "babble",
+        "clean",
+        "music",
+        "traffic",
+        "white"
+      ],
+      "context_token_values": [
+        250,
+        350,
+        450,
+        550,
+        650
+      ],
+      "snr_precision": "full floating-point precision"
+    }
+  },
+  "generator_summary_interpretation": "tier3_50k_summary.json is generator-supplied resume metadata. Its error_count=0 describes the resumed 20K phase and is not a validated zero-error statement for all 50K rows."
+}

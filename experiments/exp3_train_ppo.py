@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Experiment 3: Train the PPO meta-controller.
-79K-parameter MLP [12, 256, 256, 48] with multi-objective PPO.
+85,041-parameter policy-plus-value model with a [12, 256, 256, 48] policy MLP.
 """
 
 import json
@@ -15,7 +15,7 @@ from torch.distributions import Categorical
 
 
 class MetaController(nn.Module):
-    """79K-parameter MLP meta-controller."""
+    """85,041-parameter policy-plus-value meta-controller."""
     def __init__(self, state_dim=12, hidden=256, n_profiles=48):
         super().__init__()
         self.net = nn.Sequential(

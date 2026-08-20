@@ -8,16 +8,14 @@ aggregation — is done by pavo_bench.evaluate.benchmark_router.
 from __future__ import annotations
 
 import random
-from typing import Literal, Optional
+from typing import Literal
 
-import numpy as np
 import torch
 
 from .dataset import PAVOBenchTurn
 from .loader import load_pretrained
 from .model import MetaController
 from .state import turn_to_state_vector
-
 
 # The PAVO paper evaluates three concrete pipeline configurations end to end
 # plus the adaptive PAVO router. We expose them as named profiles so custom
@@ -79,13 +77,13 @@ class RandomRouter(BaseRouter):
 
 
 class PretrainedPAVORouter(BaseRouter):
-    """The released 85K-param PAVO meta-controller.
+    """Inspection wrapper around the released 85K-parameter controller.
 
-    The model outputs logits over 48 fine-grained profiles. For the public
-    three-way profile space we collapse those profiles by their
-    cloud-vs-edge character — the split matches the 'config_distribution'
-    histogram reported for PAVO in tier2_e2e_results.json (cloud_premium,
-    ondevice_fast, hybrid_balanced).
+    The model outputs logits over 48 analytic actions. The release does not
+    contain a concrete mapping from those indices to deployable ASR/LLM/TTS
+    tuples, so this class exposes logits but deliberately refuses to fabricate
+    one of the three public simulator profiles. See docs/CONTROLLER.md and
+    docs/RESULT_PROVENANCE.md.
     """
 
     name = "PAVO"
@@ -95,21 +93,21 @@ class PretrainedPAVORouter(BaseRouter):
         self.device = device
 
     @classmethod
-    def from_released(cls, repo_root: Optional[str] = None, device: str = "cpu") -> "PretrainedPAVORouter":
+    def from_released(cls, repo_root: str | None = None, device: str = "cpu") -> PretrainedPAVORouter:
         model, _info = load_pretrained(repo_root=repo_root, device=device)
         return cls(model, device=device)
 
-    def route(self, turn: PAVOBenchTurn) -> Profile:
+    def action_logits(self, turn: PAVOBenchTurn) -> torch.Tensor:
+        """Return the raw 48 action logits for inspection on CPU."""
         state = turn_to_state_vector(turn)
         with torch.no_grad():
             logits, _ = self.model(torch.from_numpy(state).unsqueeze(0).to(self.device))
-        idx = int(torch.argmax(logits, dim=-1).item())
-        # 48-profile space -> three public profiles. Mapping follows the paper's
-        # reported PAVO-adaptive distribution (56% hybrid / 40% cloud / 4% edge):
-        # lower indices = edge, middle = hybrid, top = cloud.
-        if idx < 2:
-            return "ondevice_fast"
-        elif idx < 29:
-            return "hybrid_balanced"
-        else:
-            return "cloud_premium"
+        return logits.squeeze(0).detach().cpu()
+
+    def route(self, turn: PAVOBenchTurn) -> Profile:
+        raise RuntimeError(
+            "The released artifact does not define a mapping from its 48 "
+            "analytic action indices to the three public deployment profiles. "
+            "Use action_logits(turn) for checkpoint inspection or implement a "
+            "deployment-specific resolver before benchmarking."
+        )

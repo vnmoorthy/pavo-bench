@@ -42,26 +42,31 @@ configs:
 pip install git+https://github.com/vnmoorthy/pavo-bench.git
 ```
 
-## Headline results (vs fixed-cloud baseline, 50,000 voice turns)
+## Headline results and evidence scope
 
-| Metric | Result | Significance |
+| Metric | Result | Public evidence scope |
 |---|---|---|
-| P95 end-to-end latency (H100, LibriSpeech) | **−10.3%** (−167 ms) | — |
-| Median latency | **−34%** | |
-| Energy per turn | **−71%** | |
-| Coherence-failure rate | **7.1% → 0.9%** (7.9× reduction) | hard-constraint masking, +110 ms median cost |
-| Meta-controller size | 85,041 parameters | — |
-| Meta-controller training | 106 seconds on H100 | — |
+| P95 end-to-end latency (H100, LibriSpeech) | **−10.3%** (−167 ms) | Mixed measured/simulated summary in `tier2_e2e_results.json` |
+| Median latency | **−34%** | Manuscript aggregate; standalone routing trace was not found |
+| Energy per turn | **−71%** | Manuscript aggregate; standalone routing trace was not found |
+| Coherence-failure rate | **7.1% → 0.9%** (7.9×), +110 ms median | Manuscript aggregate; raw annotation/routing trace was not found |
+| Meta-controller size | 85,041 parameters | Verifiable from safetensors |
+| Meta-controller training | 106 seconds on H100 | Metadata in the committed PPO log |
 
-The `p = 2×10⁻⁶` result applies to the paired test of **mean** end-to-end latency (2,277 vs 2,671 ms over five bootstrap replications), not the descriptive P95 comparison; the paired Wilcoxon test on the same five replications gives `p = 0.0625`.
+The `p = 2×10⁻⁶` result applies to the paired test of **mean** end-to-end latency (2,277 vs 2,671 ms over five catalog-simulation replications), not the descriptive P95 comparison; the paired Wilcoxon test on the same five replications gives `p = 0.0625`.
 
-The empirical contribution is a two-regime coupling structure (sharp factual-accuracy cliff + gradual semantic degradation) characterized over **n = 5,430 measurements** across two hardware platforms (H100, Apple M3) and three LLM families (Llama 3.1 8B, Mistral 7B, Gemma2 2B).
+The released coupling evidence consists of a three-model H100 aggregate
+reporting **5,400 calls** plus a preliminary Apple M3 pilot using the same
+**30 factual questions** per condition. The M3 WER labels are nominal because
+the recovered generator enforces at least one corrupted token on short
+questions. Do not interpret the manuscript's combined `n=5,430` as 5,430
+homogeneous raw records.
 
 ## Description
 
 PAVO-Bench evaluates **ASR-LLM-TTS voice pipeline routing** decisions. It provides 50,000 turns of benchmark data designed to measure how well different pipeline configurations balance **latency**, **quality**, **cost**, and **energy** when routing spoken-language queries through cascaded ASR, LLM, and TTS components.
 
-The benchmark is organized into three tiers plus component-level ablation. The 50K routing evaluation is simulated using measured H100/M3 latencies and published benchmark values for unavailable configurations; the repository also includes direct-inference H100 results.
+The benchmark is organized into three tiers plus component-level ablation. The 50K routing evaluation is simulated using measured H100/M3 latencies and published benchmark values for unavailable configurations; the repository also includes direct-inference H100 results. The [GitHub provenance map](https://github.com/vnmoorthy/pavo-bench/blob/main/docs/RESULT_PROVENANCE.md) distinguishes directly supported files, paper-only aggregates, and retained historical artifacts.
 
 ## Dataset Files
 
@@ -74,12 +79,18 @@ The Hugging Face `default` config exposes the 40K/10K JSONL files as standard `t
 | `tier3_50k_train.jsonl` | train | 40,000 |
 | `tier3_50k_test.jsonl` | test | 10,000 |
 
+`data/DATASET_AUDIT.json` records exact split hashes and counts, 1,743 literal
+`[TIMEOUT]` reference responses, and two materially different generation
+phases. The JSONL bytes are intentionally unmodified.
+
 ### Tier 1 — Unit-Level Validation
 
 | File | Description |
 |------|-------------|
 | `tier1_statistical_results.json` | Statistical reproducibility across 5 trials × 1,000 turns each (seeds 42, 123, 456, 789, 1024). |
-| `tier1_coupling_results.json` | Coupling-cliff calibration — LLM quality degradation vs ASR word-error rate (WER 0–20%). |
+| `experiments/outputs_new/coupling_3models.json` | Final three-model H100 coupling aggregate (3 × 9 × n=200). |
+| `experiments/outputs_new/coupling_m3_factual_qa.json` | Preliminary 30-question M3 factual-QA pilot with nominal WER labels. |
+| `tier1_coupling_results.json` | Historical n=10 pilot retained for compatibility; not camera-ready evidence. |
 | `tier1_llm_latency_results.json` | Latency profile for `llama3.1:8b` across short / medium / long generation contexts. |
 
 ### Tier 2 — Integration-Level Evaluation
@@ -101,7 +112,8 @@ The Hugging Face `default` config exposes the 40K/10K JSONL files as standard `t
 
 | File | Description |
 |------|-------------|
-| `component_ablation_results.json` | PAVO-Full vs PAVO-NoCoupling, Always-Cloud, Always-OnDevice, etc. |
+| `experiments/outputs_new/ablation_deberta.json` | Final DeBERTa aggregate retained for the camera-ready artifact set. |
+| `component_ablation_results.json` | Historical simulator-scale summary; not evidence for final 34%/71% manuscript aggregates. |
 
 ## Usage
 
@@ -120,11 +132,17 @@ print(json.load(open(path)))
 Or via the pip package:
 
 ```python
-from pavo_bench import load_dataset, PretrainedPAVORouter, benchmark_router
+from pavo_bench import load_dataset, PretrainedPAVORouter
 turns = load_dataset(split="test")
-pavo  = PretrainedPAVORouter.from_released()
-print(benchmark_router(pavo, turns))
+controller = PretrainedPAVORouter.from_released()
+logits = controller.action_logits(turns[0])
+print(logits.shape, int(logits.argmax()))
 ```
+
+The released checkpoint emits 48 analytic action logits, but the artifact does
+not include a defensible mapping from those indices to concrete deployment
+tuples. A deployment-specific resolver is required before routing or
+benchmarking the checkpoint.
 
 Or directly with `datasets`:
 

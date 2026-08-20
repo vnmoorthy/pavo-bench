@@ -1,18 +1,19 @@
 """
 PAVO-Bench: a 50K-turn voice pipeline benchmark + pretrained router.
 
-Minimal usage:
+Checkpoint inspection:
 
     from pavo_bench import (
-        load_dataset, PretrainedPAVORouter, AlwaysCloudRouter, benchmark_router,
+        load_dataset, PretrainedPAVORouter,
     )
 
     turns = load_dataset(split="test")          # 10K test turns
-    pavo   = PretrainedPAVORouter.from_released()
-    cloud  = AlwaysCloudRouter()
+    pavo = PretrainedPAVORouter.from_released()
+    print(pavo.action_logits(turns[0]).shape)  # torch.Size([48])
 
-    print(benchmark_router(pavo,  turns))
-    print(benchmark_router(cloud, turns))
+The release does not include the mapping from 48 analytic actions to concrete
+deployment tuples, so the pretrained wrapper does not pretend to implement a
+three-profile router. Reference and custom routers remain benchmarkable.
 
 Evaluate your own routing strategy by subclassing BaseRouter:
 
@@ -27,38 +28,38 @@ Evaluate your own routing strategy by subclassing BaseRouter:
     print(benchmark_router(MyRouter(), turns))
 """
 
+from .coupling import reproduce_coupling_cliff
 from .dataset import PAVOBenchTurn, load_dataset
-from .state import turn_to_state_vector
-from .model import MetaController
+from .evaluate import BenchmarkResult, benchmark_router
 from .loader import load_pretrained
+from .model import MetaController
 from .routers import (
-    BaseRouter,
-    Profile,
     AlwaysCloudRouter,
     AlwaysEdgeRouter,
+    BaseRouter,
     HybridRouter,
-    RandomRouter,
     PretrainedPAVORouter,
+    Profile,
+    RandomRouter,
 )
-from .evaluate import benchmark_router, BenchmarkResult
-from .coupling import reproduce_coupling_cliff
+from .state import turn_to_state_vector
 
 __all__ = [
-    "PAVOBenchTurn",
-    "load_dataset",
-    "turn_to_state_vector",
-    "MetaController",
-    "load_pretrained",
-    "BaseRouter",
-    "Profile",
     "AlwaysCloudRouter",
     "AlwaysEdgeRouter",
-    "HybridRouter",
-    "RandomRouter",
-    "PretrainedPAVORouter",
-    "benchmark_router",
+    "BaseRouter",
     "BenchmarkResult",
+    "HybridRouter",
+    "MetaController",
+    "PAVOBenchTurn",
+    "PretrainedPAVORouter",
+    "Profile",
+    "RandomRouter",
+    "benchmark_router",
+    "load_dataset",
+    "load_pretrained",
     "reproduce_coupling_cliff",
+    "turn_to_state_vector",
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"

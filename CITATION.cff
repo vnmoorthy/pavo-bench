@@ -3,15 +3,21 @@ message: "If you use PAVO-Bench or the meta-controller in your research, please 
 title: "PAVO: Pipeline-Aware Voice Orchestration with Demand-Conditioned Inference Routing"
 abstract: >
   PAVO treats the ASR-LLM-TTS voice pipeline as a jointly optimizable inference graph
-  with demand-conditioned routing. An 85,041-parameter meta-controller, trained with
-  multi-objective PPO in 106 seconds on H100, cuts P95 end-to-end latency by 10.3%
-  on 200 LibriSpeech samples. The corresponding mean-latency reduction is significant
-  at p = 2x10^-6. It reduces per-turn energy by 71% vs a fixed-cloud baseline on a
-  50,000-turn simulated benchmark. Hard-constraint masking on the
-  inter-stage coupling structure (validated across n=5,430 measurements on three
-  LLM families and two hardware platforms) reduces coherence-failure rate from
-  7.1% to 0.9% (7.9x), at +110 ms median latency cost.
+  with demand-conditioned routing. An 85,041-parameter meta-controller is trained
+  with multi-objective PPO in 106 seconds on H100. A committed 200-sample mixed
+  measured/simulated summary reports a 10.3% P95 end-to-end latency reduction;
+  its adaptive row is heuristic aggregate sampling rather than checkpoint replay.
+  In five catalog-simulation replications, the paired
+  mean-latency test gives p = 2x10^-6. The manuscript reports a 71% per-turn energy
+  reduction vs a fixed-cloud baseline on a 50,000-turn simulated benchmark; the
+  standalone routing trace is not included. Hard-constraint masking on the
+  inter-stage coupling study includes a 5,400-call H100 aggregate across three
+  LLM families and a preliminary 30-question Apple M3 pilot. The manuscript
+  reports that hard-constraint masking reduces coherence-failure rate from 7.1%
+  to 0.9% (7.9x), at +110 ms median latency cost.
 type: software
+version: 1.0.1
+date-released: 2026-08-20
 license: MIT
 url: "https://github.com/vnmoorthy/pavo-bench"
 repository-code: "https://github.com/vnmoorthy/pavo-bench"
@@ -34,6 +40,7 @@ authors:
   - family-names: Imthathullah
     given-names: Mohammed
     affiliation: Google
+    email: imthath.m@hotmail.com
 preferred-citation:
   type: article
   title: "PAVO: Pipeline-Aware Voice Orchestration with Demand-Conditioned Inference Routing"

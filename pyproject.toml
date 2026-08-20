@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pavo-bench"
-version = "1.0.0"
-description = "PAVO-Bench: a 50K-turn benchmark + an 85K-param router for ASR-LLM-TTS voice pipelines."
+version = "1.0.1"
+description = "PAVO-Bench: 50K synthetic turns and released controller artifacts for ASR-LLM-TTS routing research."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -15,7 +15,7 @@ keywords = [
 ]
 authors = [
     { name = "NarasingaMoorthy VeiluKanthaPerumal", email = "moorthyv@sas.upenn.edu" },
-    { name = "Mohammed Imthathullah" },
+    { name = "Mohammed Imthathullah", email = "imthath.m@hotmail.com" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -32,14 +32,22 @@ dependencies = [
     "numpy>=1.26",
     "torch>=2.1",
     "huggingface_hub>=0.23",
+    "safetensors>=0.4",
 ]
 
 [project.optional-dependencies]
 full = [
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "xgboost>=2.0",
     "openai-whisper>=20240930",
     "faster-whisper>=1.0",
     "bert-score>=0.3.13",
+    "transformers>=4.44",
     "datasets>=2.19",
+    "requests>=2.31",
+    "tqdm>=4.66",
+    "matplotlib>=3.7",
 ]
 dev = [
     "ruff>=0.5",

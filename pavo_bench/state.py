@@ -6,8 +6,9 @@ The layout matches exp3_train_ppo.py::RoutingEnvironment:
      RTT/200, bandwidth_proxy,
      complexity/5, context_tokens/2000]
 
-Only four of the twelve values vary per turn in PAVO-Bench (acoustic/hardware
-proxies). The remaining eight are held at their training-time defaults.
+Six distinct signals vary per turn in PAVO-Bench. They occupy seven state
+positions because SNR is used both directly and as the released WADA-SNR proxy.
+The other five positions are held at their training-time defaults.
 """
 from __future__ import annotations
 

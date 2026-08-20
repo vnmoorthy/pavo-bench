@@ -1,7 +1,8 @@
-# Bootstrap workflow. Description, topics, homepage, v1.0.0 release,
+# Bootstrap workflow. Description, topics, homepage, the original v1.0.0 release,
 # vnmoorthy/vnmoorthy profile README, GitHub Discussions, and the seed issues
 # were all applied during initial bootstrap and persist in GitHub's state.
-# This workflow is retained as a manual-dispatch no-op.
+# This workflow is retained as a manual-dispatch no-op. Camera-ready v1.0.1
+# release notes are maintained in docs/RELEASE_NOTES_v1.0.1.md.
 name: bootstrap-extras
 
 on:

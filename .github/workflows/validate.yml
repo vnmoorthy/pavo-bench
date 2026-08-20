@@ -57,8 +57,31 @@ jobs:
           python-version: "3.11"
       - name: Install ruff
         run: pip install "ruff>=0.5"
-      - name: Run ruff (informational)
-        run: ruff check experiments/ scripts/ || true
+      - name: Run ruff
+        run: >-
+          ruff check
+          pavo_bench/__init__.py
+          pavo_bench/loader.py
+          pavo_bench/routers.py
+          pavo_bench/state.py
+          pavo_bench/evaluate.py
+          tests/
+          scripts/render_figures.py
+
+  release-tests:
+    name: Release integrity tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package and test dependencies
+        run: pip install -e ".[dev]"
+      - name: Run release tests
+        run: pytest -q
+      - name: Verify artifact checksums
+        run: sha256sum --check ARTIFACTS.sha256
 
   citation-check:
     name: CITATION.cff well-formed

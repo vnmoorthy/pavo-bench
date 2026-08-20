@@ -3,8 +3,8 @@ tier2_e2e_results.json and component_ablation_results.json.
 
 benchmark_router uses these to turn a router's per-turn profile choice into an
 aggregate metrics dict without requiring the user to spin up an LLM + ASR
-stack. For exact end-to-end numbers, users should run
-experiments/run_all_experiments.py on real hardware.
+stack. The hybrid quality/cost/energy entries are documented stand-ins, so this
+module supports API demonstrations rather than camera-ready metric replay.
 """
 
 # E2E latency (ms) — mean and std, from tier2_e2e_results.json.

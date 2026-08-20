@@ -1,16 +1,15 @@
 """benchmark_router — aggregate a router's per-turn choices into a metrics dict."""
 from __future__ import annotations
 
-import math
 import random
-from dataclasses import dataclass, asdict
-from typing import Iterable, List
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 
 import numpy as np
 
-from .dataset import PAVOBenchTurn
-from .routers import BaseRouter, VALID_PROFILES
 from . import _profile_costs as pc
+from .dataset import PAVOBenchTurn
+from .routers import VALID_PROFILES, BaseRouter
 
 
 @dataclass
@@ -59,20 +58,18 @@ def benchmark_router(
 ) -> BenchmarkResult:
     """Evaluate a router over a PAVO-Bench split.
 
-    The simulator samples per-turn latency from the committed
-    tier2_e2e_results.json distributions. Quality, cost, and energy are
-    looked up per profile from component_ablation_results.json. This means
-    results line up with the paper's headline numbers but do NOT require
-    running the actual ASR/LLM stack — good for CI, education, and
-    bakeoffs against your own router.
-
-    For hardware-exact numbers, run experiments/run_all_experiments.py.
+    The convenience simulator samples per-turn latency from aggregate priors
+    and looks up quality, cost, and energy per public profile. It is useful for
+    API smoke tests and comparisons within this simulator, but it is not a
+    replay of the released PPO evaluation and its output must not be presented
+    as reproduction of the camera-ready headline table. See
+    docs/RESULT_PROVENANCE.md for the evidence attached to each paper result.
     """
     rng = random.Random(seed)
-    latencies: List[float] = []
-    quality: List[float] = []
-    cost:    List[float] = []
-    energy:  List[float] = []
+    latencies: list[float] = []
+    quality: list[float] = []
+    cost:    list[float] = []
+    energy:  list[float] = []
     infeasible = 0
     violations = 0
     dist = {p: 0 for p in VALID_PROFILES}

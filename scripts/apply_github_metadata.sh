@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Re-apply the repo's About metadata (description, topics, homepage).
-# This script does not create or modify GitHub releases. Requires an authenticated
-# token with repository-metadata scope in $GH_TOKEN.
+# This script does not create or modify GitHub releases. Camera-ready v1.0.1
+# release text is staged in docs/RELEASE_NOTES_v1.0.1.md. Requires an
+# authenticated token with repository-metadata scope in $GH_TOKEN.
 set -euo pipefail
 : "${GH_TOKEN:?export GH_TOKEN=ghp_... with repo scope first}"
 
@@ -12,7 +13,7 @@ curl -fsS -X PATCH \
   -H "Accept: application/vnd.github+json" \
   "https://api.github.com/repos/$REPO" \
   -d '{
-    "description":"A 50K-turn voice pipeline benchmark and an 85K-param meta-controller that cuts P95 latency 10.3% and energy 71% vs fixed cloud. TMLR 2026.",
+    "description":"PAVO-Bench: 50K-turn voice-pipeline data and an 85,041-parameter controller, with TMLR 2026 camera-ready provenance and reproduction code.",
     "homepage":"https://huggingface.co/datasets/vnmoorthy/pavo-bench",
     "has_issues":true,
     "has_wiki":false

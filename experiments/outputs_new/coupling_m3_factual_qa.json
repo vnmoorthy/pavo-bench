@@ -1,0 +1,155 @@
+{
+  "llama3.1:8b": {
+    "wer_0": {
+      "wer_pct": 0,
+      "accuracy": 0.9666666666666667,
+      "correct": 29,
+      "total": 30
+    },
+    "wer_2": {
+      "wer_pct": 2,
+      "accuracy": 0.6333333333333333,
+      "correct": 19,
+      "total": 30
+    },
+    "wer_4": {
+      "wer_pct": 4,
+      "accuracy": 0.6333333333333333,
+      "correct": 19,
+      "total": 30
+    },
+    "wer_6": {
+      "wer_pct": 6,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_8": {
+      "wer_pct": 8,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_10": {
+      "wer_pct": 10,
+      "accuracy": 0.6,
+      "correct": 18,
+      "total": 30
+    },
+    "wer_12": {
+      "wer_pct": 12,
+      "accuracy": 0.6,
+      "correct": 18,
+      "total": 30
+    },
+    "wer_15": {
+      "wer_pct": 15,
+      "accuracy": 0.6,
+      "correct": 18,
+      "total": 30
+    },
+    "threshold": 2
+  },
+  "gemma2:2b (80tok)": {
+    "wer_0": {
+      "wer_pct": 0,
+      "accuracy": 0.9,
+      "correct": 27,
+      "total": 30
+    },
+    "wer_2": {
+      "wer_pct": 2,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_4": {
+      "wer_pct": 4,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_6": {
+      "wer_pct": 6,
+      "accuracy": 0.7333333333333333,
+      "correct": 22,
+      "total": 30
+    },
+    "wer_8": {
+      "wer_pct": 8,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_10": {
+      "wer_pct": 10,
+      "accuracy": 0.6333333333333333,
+      "correct": 19,
+      "total": 30
+    },
+    "wer_12": {
+      "wer_pct": 12,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "wer_15": {
+      "wer_pct": 15,
+      "accuracy": 0.6666666666666666,
+      "correct": 20,
+      "total": 30
+    },
+    "threshold": 2
+  },
+  "gemma2:2b (15tok)": {
+    "wer_0": {
+      "wer_pct": 0,
+      "accuracy": 0.9,
+      "correct": 27,
+      "total": 30
+    },
+    "wer_2": {
+      "wer_pct": 2,
+      "accuracy": 0.6,
+      "correct": 18,
+      "total": 30
+    },
+    "wer_4": {
+      "wer_pct": 4,
+      "accuracy": 0.6333333333333333,
+      "correct": 19,
+      "total": 30
+    },
+    "wer_6": {
+      "wer_pct": 6,
+      "accuracy": 0.6,
+      "correct": 18,
+      "total": 30
+    },
+    "wer_8": {
+      "wer_pct": 8,
+      "accuracy": 0.7,
+      "correct": 21,
+      "total": 30
+    },
+    "wer_10": {
+      "wer_pct": 10,
+      "accuracy": 0.7,
+      "correct": 21,
+      "total": 30
+    },
+    "wer_12": {
+      "wer_pct": 12,
+      "accuracy": 0.7,
+      "correct": 21,
+      "total": 30
+    },
+    "wer_15": {
+      "wer_pct": 15,
+      "accuracy": 0.6333333333333333,
+      "correct": 19,
+      "total": 30
+    },
+    "threshold": 2
+  }
+}

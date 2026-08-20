@@ -2,13 +2,22 @@
 
 *A teaching-first walkthrough of the finding behind [PAVO-Bench](https://github.com/vnmoorthy/pavo-bench).*
 
+> **Camera-ready artifact note (August 2026):** The compact experiment below
+> is an exploratory teaching example, not the final H100 calibration or a
+> byte-for-byte reproduction recipe. Use the
+> [result-provenance map](docs/RESULT_PROVENANCE.md) and
+> [artifact-status catalog](docs/ARTIFACT_STATUS.md) when connecting paper
+> claims to released files.
+
 ---
 
 Real-time voice assistants are a pipeline: **speech → ASR → LLM → TTS → speech**.
 
 The usual way to make one faster is to tune each stage in isolation. Ship a smaller Whisper, pick a quantized Llama, swap the TTS for something streaming. Three independent wins, ship it.
 
-That approach leaves a lot on the table, and in this post I want to show you exactly why — empirically, with runnable code, on data you can reproduce on a laptop.
+That approach leaves a lot on the table. The small runnable example below
+illustrates the intuition on a laptop; the final aggregate evidence and its
+limitations are documented separately in the camera-ready artifact set.
 
 The short version: **the stages aren't independent.** The quality you can get out of the LLM is bounded, sharply, by the word-error rate of the ASR that feeds it. Miss the bound and your LLM doesn't degrade gracefully — it falls off a cliff.
 
@@ -64,7 +73,8 @@ def sweep(llm_fn: Callable[[str], str]):
 
 Swap in your LLM and run it. Or — if you don't have a GPU handy — `pip install pavo-bench` and call `reproduce_coupling_cliff(llm_fn)` with the same shape of input; the library's already set up.
 
-When I run this against Llama 3.1 8B, the curve looks like this:
+The committed camera-ready figure below is generated from the separate
+three-model H100 aggregate, not from the ten-question teaching loop above:
 
 ![Coupling cliff](figures/coupling_cliff.png)
 
@@ -92,9 +102,16 @@ Once you accept the cliff, two things follow.
 
 **Second**, the router needs to *know* about the cliff. A naive optimizer that sees only latency and cost will happily pick the small ASR for the noisy turn and watch the LLM collapse. You have to give it the coupling constraint explicitly.
 
-In PAVO we train an 85,041-parameter MLP to do this. Input is a 12-dimensional turn state (SNR, complexity, network RTT, battery, CPU utilization, and related signals). Output is a distribution over 48 pipeline configurations, with infeasible actions removed by hard logit masking. Multi-objective PPO training completes in 106 seconds on an H100.
+In PAVO we train an 85,041-parameter policy-plus-value MLP. Its released input
+is a 12-dimensional state and its output is a distribution over 48 analytic
+action factors, with infeasible actions removed by hard logit masking.
+Multi-objective PPO training completes in 106 seconds on an H100. The release
+does not contain a concrete mapping from those 48 indices to deployable
+ASR/LLM/TTS tuples, so the public wrapper exposes logits and requires a
+deployment-specific resolver.
 
-On a 50,000-turn benchmark, against a fixed-cloud baseline:
+The camera-ready manuscript reports the following results against a fixed-cloud
+baseline:
 
 - **−10.3% P95 tail compression** (−167 ms on H100 / 200 LibriSpeech samples)
 - **−34% median latency** (50K-turn benchmark)
@@ -102,11 +119,20 @@ On a 50,000-turn benchmark, against a fixed-cloud baseline:
 - **7.1% → 0.9% coherence-failure rate** (7.9× reduction via hard-constraint masking, +110 ms median latency cost)
 - Quality parity on non-coupling-violating turns
 
-The `p = 2×10⁻⁶` test concerns the corresponding reduction in **mean** latency over five paired bootstrap replications, not the descriptive P95 result; the paired Wilcoxon test on those five replications gives `p = 0.0625`.
+The `p = 2×10⁻⁶` test concerns **mean** latency over five paired
+catalog-simulation replications, not the descriptive P95 result; the paired
+Wilcoxon test on those five replications gives `p = 0.0625`. Standalone raw
+traces were not found for the manuscript's 34%/71%, coherence-failure, kappa,
+or full acoustic-ablation aggregates; the provenance map states the exact
+evidence scope.
 
 ## Reproduce it
 
-The 50,000-turn benchmark, released result JSONs, trained router, and code are on GitHub. Code uses the MIT License; data, results, and model weights use CC-BY 4.0:
+The unmodified 50,000-row synthetic split, released result summaries,
+controller checkpoints, and code are on GitHub. The dataset contains 1,743
+literal `[TIMEOUT]` reference responses and two generation phases, both
+recorded in `data/DATASET_AUDIT.json`. Code uses the MIT License; data, results,
+and model weights use CC-BY 4.0:
 
 ```bash
 pip install git+https://github.com/vnmoorthy/pavo-bench.git

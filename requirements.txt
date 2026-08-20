@@ -6,6 +6,8 @@ torch>=2.1,<2.6
 numpy>=1.26,<2.2
 scipy>=1.11
 scikit-learn>=1.3
+xgboost>=2.0
+safetensors>=0.4
 
 # ASR
 openai-whisper>=20240930
@@ -14,6 +16,7 @@ faster-whisper>=1.0
 # LLM client + dataset tooling
 huggingface_hub>=0.23
 datasets>=2.19
+requests>=2.31
 
 # Quality scoring
 bert-score>=0.3.13

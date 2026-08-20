@@ -1,123 +1,123 @@
-# Result-file schemas
+# Camera-Ready Data and Result Schemas
 
-Each committed JSON in this repo is one experimental artifact. This file
-documents the shape of every one so consumers don't have to grep.
+This document describes the paper-aligned files identified in
+`docs/ARTIFACT_STATUS.md`. Historical files retain their original schemas and
+are not remapped to camera-ready claims.
 
-## Tier 1 — components
+## Benchmark records
 
-### `tier1_coupling_results.json`
-Coupling cliff calibration. Per-WER-level mean / std quality scores.
-
-```jsonc
-{
-  "experiment": "Coupling Constraint Validation",
-  "model": "llama3.1:8b",
-  "n_queries_per_wer": 200,
-  "wer_levels_tested": [0, 1, 2, 3, 5, 8, 10, 15, 20],
-  "results": {
-    "wer_<pct>": {
-      "wer_pct": <int>,
-      "mean_quality": <float, 0..1>,
-      "std_quality":  <float>,
-      "n_queries":    <int>,
-      "quality_scores": [<float>, ...],
-      "degradation_from_clean": <float>,
-      "degradation_pct":        <float>
-    }
-  }
-}
-```
-
-### `tier1_llm_latency_results.json`
-LLM latency profile across short/medium/long contexts.
+`tier3_50k_train.jsonl` and `tier3_50k_test.jsonl` contain one JSON object per
+line:
 
 ```jsonc
 {
-  "<model>_<short|medium|long>": {
-    "model": "llama3.1:8b",
-    "context": "short|medium|long",
-    "num_predict": <int>,
-    "n_measurements": <int>,
-    "total_latency_ms":     {"mean":..., "std":..., "median":..., "p95":..., "p99":..., "min":..., "max":...},
-    "time_to_first_token_ms": {...},
-    "tokens_per_second":      {...},
-    "output_tokens":          {...}
-  }
+  "index": 32453,
+  "complexity": 1,
+  "snr_db": 20.58,
+  "noise_type": "white",
+  "cpu_util": 0.84,
+  "battery": 0.89,
+  "rtt_ms": 94.27,
+  "ctx_tokens": 250,
+  "source": "synthetic",
+  "audio_idx": 113,
+  "user_input": "...",
+  "reference_response": "..."
 }
 ```
 
-### `tier1_statistical_results.json`
-Statistical reproducibility across 5 trials of 1,000 turns each.
+The train and test files contain 40,000 and 10,000 rows. The unmodified bytes
+contain 1,743 literal `[TIMEOUT]` reference responses and two generation
+phases. `data/DATASET_AUDIT.json` records exact hashes, split integrity, and
+realized distributions. `tier3_50k_summary.json` is generator-supplied resume
+metadata; its `error_count` describes the resumed 20K phase, not all 50K rows.
 
-## Tier 2 — integration
+## Statistical simulation
 
-### `tier2_e2e_results.json`
-End-to-end pipeline measurements for four configurations.
+`tier1_statistical_results.json` contains five paired catalog-simulation
+replications. Metric objects contain `values`, `mean`, `std`, and 95% confidence
+limits. `comparisons.pavo_vs_cloud_latency` contains the paired t-test and
+Wilcoxon values. The p-value here applies to mean latency, not the descriptive
+P95 result.
+
+## Mixed measured/simulated E2E summary
+
+`tier2_e2e_results.json` contains `cloud_premium`, `ondevice_fast`,
+`hybrid_balanced`, and `pavo_adaptive`. Fixed configurations contain latency
+summaries and stage summaries. The adaptive record adds routing counts and
+percentages. See `docs/RESULT_PROVENANCE.md`: the adaptive row is heuristic
+aggregate sampling, not released-controller checkpoint replay.
+
+## Three-model H100 coupling aggregate
+
+`experiments/outputs_new/coupling_3models.json` is keyed by LLM family and then
+nominal injected-WER level. Each leaf contains:
 
 ```jsonc
 {
-  "cloud_premium":   {"config": {...}, "n_samples": 200, "e2e_latency_ms": {...},
-                      "asr_latency_ms": {...}, "llm_latency_ms": {...},
-                      "sample_asr_outputs": [...], "sample_llm_responses": [...]},
-  "ondevice_fast":   {...},
-  "hybrid_balanced": {...},
-  "pavo_adaptive":   {"description":..., "n_samples":..., "e2e_latency_ms":...,
-                      "config_distribution": {...}, "config_distribution_pct": {...}}
+  "exact_match": 0.95,
+  "quality_score": 0.876,
+  "n": 200
 }
 ```
 
-### `tier2_cross_dataset_results.json`
-ASR cross-dataset comparison on LibriSpeech and FLEURS.
+There are 27 aggregate cells: 3 models × 9 WER levels × `n=200`, reporting
+5,400 calls. Individual records and a byte-matching final generator are not
+present.
 
-### `tier2_noise_robustness_results.json`
-ASR WER under white-noise injection at SNR 5–30 dB.
+## Preliminary M3 factual-QA pilot
 
-### `experiments/outputs_new/real_asr_coupling.json`
-Real Whisper-error coupling across ASR–LLM pairs. `asr_word_accuracy_pct`
-is word accuracy on a 0–100 scale (for example, `99.57`); it is not WER.
-
-## Tier 3 — scale
-
-### `tier3_50k_train.jsonl` / `tier3_50k_test.jsonl`
-The PAVO-Bench dataset. One JSON object per line:
+`experiments/outputs_new/coupling_m3_factual_qa.json` is keyed by three model
+configurations and eight nominal WER labels. Each condition summarizes the same
+30 questions:
 
 ```jsonc
 {
-  "index":           <int>,           // turn ID
-  "complexity":      <int 1..5>,      // turn complexity
-  "snr_db":          <float>,         // ambient SNR
-  "noise_type":      <str>,           // "babble" | "traffic" | ...
-  "cpu_util":        <float 0..1>,    // device CPU
-  "battery":         <float 0..1>,    // device battery
-  "rtt_ms":          <float>,         // network RTT
-  "ctx_tokens":      <int>,           // dialogue context depth
-  "user_input":      <str>,
-  "reference_response": <str>,
-  "source":          <str>,
-  "audio_idx":       <int|null>
+  "wer_pct": 2,
+  "accuracy": 0.6333333333333333,
+  "correct": 19,
+  "total": 30
 }
 ```
 
-### `tier3_50k_summary.json`
-Aggregate statistics for the dataset.
+The `threshold` field is the first tested WER label where accuracy fell below
+0.70. The recovered generator is
+`experiments/original_runs/coupling_m3_factual_qa.py`. Its minimum-one-token
+corruption makes the WER labels nominal for these short questions; see the
+provenance document.
 
-### `tier3_scaling_results.json`
-Per-model latency benchmarks for simple / medium / complex queries.
+## Real ASR coupling
 
-## Component analysis
-
-### `component_ablation_results.json`
-PAVO-Full vs ablated configurations on the 50K test split.
+`experiments/outputs_new/real_asr_coupling.json` is keyed by ASR–LLM pair:
 
 ```jsonc
 {
-  "<config_name>": {
-    "latency_ms":  {"mean": <float>, "std": <float>},
-    "quality":     {"mean": <float>, "std": <float>},
-    "cost_usd":    {"mean": <float>, "std": <float>},
-    "energy_mj":   {"mean": <float>, "std": <float>},
-    "coupling_violations": {"mean": <int>, "per_1000": <float>},
-    "infeasible_pct": <float>
-  }
+  "asr_word_accuracy_pct": 99.57,
+  "bertscore_deberta": 0.527,
+  "n_samples": 100
 }
 ```
+
+`asr_word_accuracy_pct` is word accuracy on a 0–100 scale; it is not WER.
+
+## Other paper-aligned summaries
+
+- `tier1_llm_latency_results.json`: per-context latency, TTFT, throughput, and
+  output-token summaries.
+- `tier2_cross_dataset_results.json`: LibriSpeech and FLEURS ASR summaries.
+- `tier2_noise_robustness_results.json`: direct ASR noise/SNR summaries plus a
+  synthetic-text-corruption LLM section. Its `error_rate` is an API-failure
+  indicator, not a coherence-failure rate.
+- `tier3_scaling_results.json`: model latency by query-complexity band.
+- `experiments/outputs_new/ablation_deberta.json`: final DeBERTa aggregate.
+- `data/supervised_baseline_results.json`: classifier/oracle comparison.
+- `experiments/outputs_new/e2e_librispeech.json`: additional direct-inference
+  summary.
+- `experiments/outputs/training_log.json`: PPO trajectory and runtime metadata.
+
+## Model files
+
+`experiments/outputs/meta_controller.safetensors` and
+`experiments/outputs/meta_controller_best.safetensors` contain policy and value
+network weights. Each has 85,041 scalar parameters. Checksums are recorded in
+`experiments/outputs/CHECKSUMS.txt` and `ARTIFACTS.sha256`.
