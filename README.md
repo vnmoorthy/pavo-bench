@@ -2,35 +2,40 @@
 
 **Demand-conditioned inference routing for real-time ASR → LLM → TTS voice pipelines.**
 
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Code license: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
+[![Data license: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-lightgrey.svg)](DATA_LICENSE.md)
 [![Paper](https://img.shields.io/badge/paper-TMLR%202026-blue)](#citation)
 [![Dataset](https://img.shields.io/badge/dataset-PAVO--Bench%2050K-orange)](https://huggingface.co/datasets/vnmoorthy/pavo-bench)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/vnmoorthy/pavo-bench/actions/workflows/validate.yml/badge.svg)](https://github.com/vnmoorthy/pavo-bench/actions/workflows/validate.yml)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vnmoorthy/pavo-bench/blob/main/notebooks/quickstart.ipynb)
 
-PAVO treats the voice-assistant pipeline as a jointly optimizable inference graph. An **85,041-parameter** meta-controller, trained with multi-objective PPO in **106 seconds**, decides per turn whether to route each ASR → LLM → TTS call to a cloud or edge configuration. The empirical contribution is a characterization of **inter-stage coupling constraints** — quality dependencies where upstream ASR choices bound what downstream LLMs can recover from.
+PAVO treats the voice-assistant pipeline as a jointly optimizable inference graph. An **85,041-parameter** meta-controller, trained with multi-objective PPO in **106 seconds on an H100**, decides per turn whether to route each ASR → LLM → TTS call to a cloud or edge configuration. The empirical contribution is a characterization of **inter-stage coupling constraints** — quality dependencies where upstream ASR choices bound what downstream LLMs can recover from.
 
 **Authors:** NarasingaMoorthy VeiluKanthaPerumal (University of Pennsylvania) and Mohammed Imthathullah (Google).
+
+**Status:** Accepted at Transactions on Machine Learning Research (TMLR), 2026.
 
 ---
 
 ## Headline results
 
-Measured on NVIDIA A100-SXM4-40GB and H100 (Lambda Labs), with Apple M3 8 GB for the edge configurations. 50,000 voice turns total.
+Direct experiments use NVIDIA H100 (Lambda Labs) and Apple M3 8 GB. The 50,000-turn routing evaluation is a simulation parameterized by those measurements and published benchmarks for unavailable A100/Jetson configurations.
 
 | Metric | vs fixed-cloud baseline | Significance |
 |---|---|---|
-| P95 end-to-end latency (H100, LibriSpeech) | **−10.3%** (−167 ms) | p = 2×10⁻⁶ |
+| P95 end-to-end latency (H100, LibriSpeech) | **−10.3%** (−167 ms) | — |
 | Median latency | **−34%** | |
 | Energy per turn | **−71%** | |
 | Coherence-failure rate | **7.1% → 0.9%** (7.9× reduction) | hard-constraint masking, +110 ms median cost |
 | Meta-controller size | 85,041 parameters | — |
 | Meta-controller training | 106 seconds | — |
 
+The reported `p = 2×10⁻⁶` is from the paired test of **mean** end-to-end latency (2,277 vs 2,671 ms over five bootstrap replications), not the descriptive P95 comparison. The paired Wilcoxon test on the same five replications gives `p = 0.0625`.
+
 ![Coupling cliff — downstream LLM quality vs upstream ASR WER](figures/coupling_cliff.png)
 
-The paper characterizes a two-regime coupling structure: a **sharp factual-accuracy cliff** at low WER and **gradual semantic degradation** above it. Gemma2 2B mean quality drops from **0.825 → 0.585** as ASR WER crosses 2% (n=200 per WER level). Downstream LLM performance is not independent of upstream ASR configuration, so a router that ignores upstream state will make the wrong choice.
+The paper characterizes two coupling regimes: a **sharp factual-accuracy cliff** and **gradual semantic degradation**. In the H100 calibration (n=200 per WER level per model), all three LLM families remain stable through 10% injected WER and degrade at 15–20%. PAVO uses 2% as a conservative safety threshold; it is not the measured H100 cliff location. Downstream LLM performance is therefore not independent of the upstream ASR configuration.
 
 ---
 
@@ -76,17 +81,17 @@ git clone https://github.com/vnmoorthy/pavo-bench.git
 cd pavo-bench
 bash experiments/setup.sh                  # installs torch, whisper, ollama + pulls llama3.1:8b and gemma2:2b
 
-# Run every experiment in sequence (Tier 1 + Tier 2 + Tier 3)
-python experiments/run_all_experiments.py --hf-token "$HF_TOKEN"
+# Run all tiers without modifying the public artifact repository
+python experiments/run_all_experiments.py --skip-upload
 
 # Or run experiments individually
 python experiments/exp1_e2e_pipeline.py          # End-to-end pipeline (Tier 2)
 python experiments/exp2_coupling_calibration.py  # Coupling cliff (Tier 1, 5,430 measurements across H100/M3 × Llama/Mistral/Gemma)
-python experiments/exp3_train_ppo.py             # PPO meta-controller training (~106 s on A100)
+python experiments/exp3_train_ppo.py             # PPO meta-controller training (~106 s on H100)
 python experiments/exp4_real_ablation.py         # Component ablation with BERTScore
 ```
 
-Training-only reproduction runs in **~2 minutes** on a single A100. A full reproduction of all tiers takes roughly half a day on an H100 including ollama warm-up and LibriSpeech downloads.
+Training-only reproduction runs in **~2 minutes** on a single H100. A full reproduction of all tiers takes roughly half a day on an H100 including ollama warm-up and LibriSpeech downloads.
 
 ---
 
@@ -95,15 +100,18 @@ Training-only reproduction runs in **~2 minutes** on a single A100. A full repro
 ```
 experiments/
   setup.sh                     Install deps, ollama, and pull models
-  run_all_experiments.py       Master runner (argparse: --hf-token, --skip-*)
+  run_all_experiments.py       Master runner (cached HF login or hidden token prompt)
   exp1_e2e_pipeline.py         End-to-end pipeline (Whisper + LLM on LibriSpeech)
   exp2_coupling_calibration.py Coupling cliff: n=200 per WER, 5,430 measurements (H100/M3 × Llama/Mistral/Gemma)
   exp3_train_ppo.py            PPO meta-controller training (85K params, 106 s)
   exp4_fix.py                  Component ablation (fixed quality heuristic)
   exp4_real_ablation.py        Component ablation with BERTScore
   outputs/
-    meta_controller.pt         Trained weights (85,041 params)
-    meta_controller_best.pt    Best checkpoint
+    meta_controller.safetensors       Pickle-free inference-only trained weights
+    meta_controller_best.safetensors  Pickle-free inference-only best checkpoint
+    meta_controller.pt                Legacy PyTorch checkpoint
+    meta_controller_best.pt           Legacy best checkpoint
+    CHECKSUMS.txt                      SHA-256 checksums for all checkpoints
     training_log.json          PPO training log (100 K steps)
     coupling_results_200.json  Coupling calibration (n=200 per WER)
     ablation_bertscore.json    Real ablation with BERTScore
@@ -131,10 +139,10 @@ figures/                       Committed PNGs rendered from the tier*.json files
 
 ## Reproducing the headline numbers
 
-Every number in the results table is backed by a committed script and a committed JSON result file. A one-command full reproduction:
+Committed scripts and result files are included for the released evaluations. A one-command experiment run is:
 
 ```bash
-python experiments/run_all_experiments.py --hf-token "$HF_TOKEN"
+python experiments/run_all_experiments.py --skip-upload
 ```
 
 Or tier by tier:
@@ -143,7 +151,7 @@ Or tier by tier:
 |---|---|---|
 | Tier 1 — components | `exp2_coupling_calibration.py` | `tier1_*.json` |
 | Tier 2 — integration | `exp1_e2e_pipeline.py`, `exp4_real_ablation.py` | `tier2_*.json`, `component_ablation_results.json` |
-| Tier 3 — scale | `exp3_train_ppo.py` + PAVO-Bench dataset | `tier3_*.json`, `tier3_50k_*.jsonl`, `experiments/outputs/meta_controller*.pt` |
+| Tier 3 — scale | `exp3_train_ppo.py` + PAVO-Bench dataset | `tier3_*.json`, `tier3_50k_*.jsonl`, `experiments/outputs/meta_controller*` |
 
 Regenerate the committed figures from the committed JSONs at any time:
 
@@ -155,13 +163,13 @@ python scripts/render_figures.py
 
 ## Hardware and models
 
-- **GPU measurements:** NVIDIA A100-SXM4-40GB (Lambda Labs); 3-model coupling ablations rerun on H100.
+- **GPU measurements:** NVIDIA H100 SXM5 (Lambda Labs); published A100 figures parameterize simulator configurations that were unavailable directly.
 - **Edge measurements:** Apple M3, 8 GB.
 - **ASR:** Whisper large-v3 and Whisper tiny.
 - **LLM:** Llama 3.1 8B and Gemma2 2B via [ollama](https://ollama.ai). 3-model ablations also include Mistral 7B.
 - **Quality scoring:** BERTScore with RoBERTa-large (plus DeBERTa-xlarge-MNLI and DistilBERT ablations).
 
-See `paper/` for the full methodology.
+See the [TMLR paper on OpenReview](https://openreview.net/forum?id=zrneoIxlFx) for the full methodology.
 
 ---
 
@@ -192,7 +200,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT
 
 ## License
 
-Code and dataset released under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Code is released under the [MIT License](LICENSE). The dataset, results, coupling matrices, and model weights are released under [CC-BY 4.0](DATA_LICENSE.md).
 
 ## Links
 

@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "PAVO-Bench: a 50K-turn benchmark + an 85K-param router for ASR-LLM-TTS voice pipelines."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "CC-BY-4.0" }
+license = { text = "MIT" }
 keywords = [
     "voice-pipeline", "asr", "llm", "tts", "inference-routing",
     "edge-ai", "benchmark", "reinforcement-learning",
@@ -20,7 +20,7 @@ authors = [
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -48,7 +48,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/vnmoorthy/pavo-bench"
-Paper = "https://github.com/vnmoorthy/pavo-bench/tree/main/paper"
+Paper = "https://openreview.net/forum?id=zrneoIxlFx"
 Dataset = "https://huggingface.co/datasets/vnmoorthy/pavo-bench"
 Issues = "https://github.com/vnmoorthy/pavo-bench/issues"
 

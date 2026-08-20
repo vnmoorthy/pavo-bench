@@ -28,7 +28,7 @@ figures:                    ## Re-render figures from the committed JSONs
 
 repro:                      ## Run the full GPU experiment suite
 	bash experiments/setup.sh
-	$(PYTHON) experiments/run_all_experiments.py --hf-token "$$HF_TOKEN"
+	$(PYTHON) experiments/run_all_experiments.py --skip-upload
 
 clean:                      ## Remove build/cache artifacts (no data files touched)
 	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .ruff_cache/ __pycache__/

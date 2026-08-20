@@ -68,9 +68,9 @@ When I run this against Llama 3.1 8B, the curve looks like this:
 
 ![Coupling cliff](figures/coupling_cliff.png)
 
-At WER ≤ 2% the LLM hums along near ceiling. At WER = 3% quality has already dropped noticeably, and by WER = 5% it's tanked. The left side is almost flat. The right side is almost flat. The middle is a cliff — sharp, narrow, and exactly in the operating range where a noisy office or a bad microphone can push you.
+The larger H100 calibration uses 200 queries per WER level for each of three LLM families. Quality is stable through 10% injected WER and then degrades at 15–20%. A smaller preliminary M3 factual-QA calibration showed sensitivity around 2%; PAVO therefore uses 2% as a conservative safety threshold, not as the measured H100 cliff location.
 
-The cliff's shape is robust. We reran it with Mistral 7B, Gemma2 2B, and Phi-3; the threshold shifts by a few percentage points depending on model capacity, but the cliff is always there.
+We reran the H100 calibration with Llama 3.1 8B, Mistral 7B, and Gemma2 2B. The exact degradation profile varies by model, but all three show the same stable-then-degrading two-regime structure.
 
 ## Why this breaks stage-by-stage optimization
 
@@ -80,7 +80,7 @@ If you're a systems engineer optimizing a voice pipeline, your instinct is:
 
 On paper this looks fine. You measure Whisper-large: 4.2% WER. Whisper-tiny: 6.1% WER. That's a 50% speedup for a 2-point WER regression. Great trade.
 
-In practice, that 2-point regression is exactly the part of the WER axis where the LLM falls off the cliff. You didn't just lose 2 points of ASR accuracy. You catastrophically lost *downstream* quality, in a way that doesn't show up if you benchmark ASR and LLM separately.
+In practice, an ASR change can move a request across the downstream model's calibrated safety boundary. The resulting LLM-quality loss does not appear when ASR and LLM are benchmarked independently.
 
 This is what "inter-stage coupling" means, and it's what the PAVO paper formalizes: the LLM's quality function is **conditionally defined** on the ASR's output distribution. Optimizing either in isolation will systematically mislead you.
 
@@ -92,23 +92,25 @@ Once you accept the cliff, two things follow.
 
 **Second**, the router needs to *know* about the cliff. A naive optimizer that sees only latency and cost will happily pick the small ASR for the noisy turn and watch the LLM collapse. You have to give it the coupling constraint explicitly.
 
-In PAVO we train an 85,041-parameter MLP to do this. Input is a 12-dim turn state (SNR, complexity, network RTT, battery, CPU util, etc). Output is a distribution over 48 pipeline configurations. Training is multi-objective PPO, reward = weighted sum of quality, latency, cost, energy, with a hard penalty for coupling violations. The whole thing trains in 106 seconds on an A100.
+In PAVO we train an 85,041-parameter MLP to do this. Input is a 12-dimensional turn state (SNR, complexity, network RTT, battery, CPU utilization, and related signals). Output is a distribution over 48 pipeline configurations, with infeasible actions removed by hard logit masking. Multi-objective PPO training completes in 106 seconds on an H100.
 
 On a 50,000-turn benchmark, against a fixed-cloud baseline:
 
-- **−10.3% P95 tail compression** (−167 ms on H100 / 200 LibriSpeech samples; p = 2×10⁻⁶)
+- **−10.3% P95 tail compression** (−167 ms on H100 / 200 LibriSpeech samples)
 - **−34% median latency** (50K-turn benchmark)
 - **−71% energy per turn** (50K-turn benchmark)
 - **7.1% → 0.9% coherence-failure rate** (7.9× reduction via hard-constraint masking, +110 ms median latency cost)
 - Quality parity on non-coupling-violating turns
 
+The `p = 2×10⁻⁶` test concerns the corresponding reduction in **mean** latency over five paired bootstrap replications, not the descriptive P95 result; the paired Wilcoxon test on those five replications gives `p = 0.0625`.
+
 ## Reproduce it
 
-The whole benchmark — 50,000 turns, all committed result JSONs, the trained router, all the code — is on GitHub under CC-BY 4.0:
+The 50,000-turn benchmark, released result JSONs, trained router, and code are on GitHub. Code uses the MIT License; data, results, and model weights use CC-BY 4.0:
 
 ```bash
-pip install pavo-bench                           # Python API, Colab-friendly
-git clone https://github.com/vnmoorthy/pavo-bench  # full paper + experiments
+pip install git+https://github.com/vnmoorthy/pavo-bench.git
+git clone https://github.com/vnmoorthy/pavo-bench  # code, data, and experiments
 ```
 
 Or, if you just want to see the result on a free-tier Colab in two minutes:
@@ -121,7 +123,7 @@ The things I'd love feedback on:
 2. The PPO reward design — we used a soft penalty for coupling violations; a constrained-RL formulation might be cleaner.
 3. The benchmark generator. Complexity labels are heuristic; a learned labeler might change the numbers.
 
-The paper's under review at TMLR. If you build on PAVO-Bench, the `CITATION.cff` in the repo has a copy-paste BibTeX entry.
+The paper was accepted at TMLR in 2026. If you build on PAVO-Bench, the `CITATION.cff` in the repo has a copy-paste citation.
 
 ---
 
